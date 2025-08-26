@@ -29,8 +29,6 @@ def cmd_check_bq(project: str, dataset: str, tables_csv: str, verbose: bool) -> 
     try:
         runner = BigQueryRunner(project_id=project or None, dataset_id=dataset or None)
     except Exception as e:
-        print(f"Failed to initialize BigQuery client: {e}")
-        print("Hint: Ensure GCP auth is configured. You can set GOOGLE_APPLICATION_CREDENTIALS to a service account JSON or run 'gcloud auth application-default login'.")
         return 1
 
     # List tables in dataset
