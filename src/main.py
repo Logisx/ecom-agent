@@ -3,8 +3,15 @@ import logging
 import sys
 from typing import List
 
-from big_query_runner import BigQueryRunner
+from src.services.big_query_runner import BigQueryRunner
 
+from src.graph.state import AgentState
+
+import os
+from dotenv import load_dotenv
+
+
+from src.graph.agent import run_chat_once_graph
 
 def configure_logging(verbose: bool) -> None:
     level = logging.DEBUG if verbose else logging.INFO
@@ -66,16 +73,51 @@ def build_parser() -> argparse.ArgumentParser:
     check_bq.add_argument("--tables", default="orders,order_items,products,users", help="Comma-separated table names to describe")
     check_bq.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
 
+    chat = subparsers.add_parser("chat", help="Start a chat session with the Ecom agent")
+    chat.add_argument("--project", default=None, help="GCP project id (optional)")
+    chat.add_argument("--dataset", default="bigquery-public-data.thelook_ecommerce", help="Dataset id 'project.dataset'")
+    chat.add_argument("--model", default="gemini-2.0-flash-lite", help="Gemini model name")
+    chat.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
+
     return parser
 
 
 def main() -> None:
+    load_dotenv()
     parser = build_parser()
     args = parser.parse_args()
 
     if args.command == "check-bq":
         exit_code = cmd_check_bq(args.project, args.dataset, args.tables, args.verbose)
         sys.exit(exit_code)
+    elif args.command == "chat":
+        configure_logging(args.verbose)
+        # Ensure API key is present
+        if not os.getenv("GOOGLE_API_KEY"):
+            print("GOOGLE_API_KEY is not set.")
+            sys.exit(1)
+        # Simple REPL
+        state: AgentState = {"messages": [] , "sql": None}
+        print("EcomAgent ready. Type 'exit' to quit.\n")
+        while True:
+            try:
+                user_input = input("You: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+            if user_input.lower() in {"exit", "quit"}:
+                break
+            state["messages"].append({"role": "user", "content": user_input})
+            try:
+                summary = run_chat_once_graph(question=user_input, dataset_id=args.dataset, project_id=args.project, model_name=args.model)
+                print(summary)
+                #result = graph.invoke(state)
+                #state = result
+                #last = state["messages"][-1] if state.get("messages") else {"content": "(no response)"}
+                #print(f"Agent: {last.get('content', '')}\n")
+            except Exception as e:
+                print(f"Error: {e}")
+                continue
     else:
         parser.print_help()
         sys.exit(2)

@@ -70,3 +70,19 @@ class BigQueryRunner:
         except Exception as e:
             logging.error(f"Failed to get schema for table {table_name}: {str(e)}")
             raise  
+
+    def list_tables(self) -> List[str]:
+        """List all table names in the configured dataset.
+        
+        Returns:
+            List of table names as strings.
+        """
+        try:
+            logging.info(f"Listing tables in dataset: {self.dataset_id}")
+            tables = self.client.list_tables(self.dataset_id)
+            table_names = [table.table_id for table in tables]
+            logging.info(f"Found {len(table_names)} tables in dataset {self.dataset_id}")
+            return table_names
+        except Exception as e:
+            logging.error(f"Failed to list tables for dataset {self.dataset_id}: {str(e)}")
+            raise
