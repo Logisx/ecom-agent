@@ -11,7 +11,7 @@ import os
 from dotenv import load_dotenv
 
 
-from src.graph.agent import run_chat_once_graph
+from src.graph.runner import run_chat_once
 
 def configure_logging(verbose: bool) -> None:
     level = logging.DEBUG if verbose else logging.INFO
@@ -109,7 +109,7 @@ def main() -> None:
                 break
             state["messages"].append({"role": "user", "content": user_input})
             try:
-                summary = run_chat_once_graph(question=user_input, dataset_id=args.dataset, project_id=args.project, model_name=args.model)
+                summary = run_chat_once(question=user_input, dataset_id=args.dataset, project_id=args.project, model_name=args.model)
                 print(summary)
                 #result = graph.invoke(state)
                 #state = result
