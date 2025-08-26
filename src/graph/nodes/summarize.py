@@ -5,6 +5,7 @@ import os
 logger = logging.getLogger(__name__)
 
 
+from src.graph.nodes.base_node import BaseNode
 from src.services.llm import get_llm
 from src.graph.state import AgentState
 
@@ -19,22 +20,24 @@ SYSTEM_PROMPT = (
     "- users(id, first_name, last_name, email, age, gender, state, street_address, postal_code, city, country, latitude, longitude, traffic_source, created_at, user_geom)\n"
 )
 
-def node(state: AgentState) -> AgentState:
-    # Don't hard-assert here; get_llm() will read env and raise if missing
-    llm = get_llm()
-    df_preview = state.get("df_preview")  # type: ignore[index]
-    preview = "" if df_preview is None else df_preview.to_string(index=False)
-    question = state.get("question", "")  # type: ignore[index]
-    prompt = (
-        f"{SYSTEM_PROMPT}\n\n"
-        f"Question: {question}\n"
-        "Here is a small preview of query results (first rows):\n"
-        f"{preview}\n\n"
-        "Provide a concise, actionable insight summary (3-6 sentences)."
-    )
-    msg = llm.invoke(prompt)
-    state["summary"] = msg.content if isinstance(msg.content, str) else str(msg.content)  # type: ignore[index]
-    return state
+
+class SummarizeNode(BaseNode):
+    def __call__(self, state: AgentState) -> AgentState:
+        # Don't hard-assert here; get_llm() will read env and raise if missing
+        llm = get_llm()
+        df_preview = state.get("df_preview")  # type: ignore[index]
+        preview = "" if df_preview is None else df_preview.to_string(index=False)
+        question = state.get("question", "")  # type: ignore[index]
+        prompt = (
+            f"{SYSTEM_PROMPT}\n\n"
+            f"Question: {question}\n"
+            "Here is a small preview of query results (first rows):\n"
+            f"{preview}\n\n"
+            "Provide a concise, actionable insight summary (3-6 sentences)."
+        )
+        msg = llm.invoke(prompt)
+        state["summary"] = msg.content if isinstance(msg.content, str) else str(msg.content)  # type: ignore[index]
+        return state
 
 """
 def node(state: Dict[str, Any]) -> Dict[str, Any]:

@@ -1,22 +1,22 @@
-from typing import TypedDict, Annotated, Optional, List, Dict, Any
+from typing import TypedDict, Annotated, Optional, Dict, Any
 from langgraph.graph.message import add_messages
-from dataclasses import dataclass, field
-
 import pandas as pd
 
-@dataclass
-class AgentState(TypedDict):
+
+class AgentState(TypedDict, total=False):
+    # Conversation and inputs
     messages: Annotated[list[dict], add_messages]
     question: str
     dataset_id: str
-    project_id: Optional[str] = None
-    model_name: str = "gemini-2.0-flash-lite"
-    api_key: Optional[str] = None
+    project_id: Optional[str]
+    model_name: str
+    api_key: Optional[str]
 
-    sql: Optional[str] = None
-    df_preview: Optional[pd.DataFrame] = None
-    summary: Optional[str] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
+    # Intermediate and outputs
+    sql: Optional[str]
+    df_preview: Optional[pd.DataFrame]
+    summary: Optional[str]
+    extra: Dict[str, Any]
 
 
 
