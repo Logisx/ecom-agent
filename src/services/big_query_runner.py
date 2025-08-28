@@ -2,6 +2,9 @@ import logging
 from typing import Optional, List, Dict, Any
 import pandas as pd
 from google.cloud import bigquery
+from typing import Optional, List, Dict, Any
+import pandas as pd
+from google.cloud import bigquery
 
 
 class BigQueryRunner:
@@ -70,3 +73,5 @@ class BigQueryRunner:
         except Exception as e:
             logging.error(f"Failed to get schema for table {table_name}: {str(e)}")
             raise  
+
+

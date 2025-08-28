@@ -51,3 +51,6 @@ dmypy.json
 
 # Profiling data
 .prof
+
+# Graph structure
+graph.png

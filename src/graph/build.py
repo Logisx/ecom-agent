@@ -1,48 +1,42 @@
 from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
 import logging
 from src.graph.state import AgentState
-from src.graph.nodes import plan, sql_generate, dry_run, execute, repair_sql, route, summarize
 
-
-from src.graph.nodes.plan_sql import PlanSQLNode
-from src.graph.nodes.run_sql import RunSQLNode
+from langgraph.prebuilt import ToolNode, tools_condition
 from src.graph.nodes.summarize import SummarizeNode
+from src.graph.nodes.analyze import AnalyzeNode
+from src.graph.tools.bigquery import query_bigquery_tool, describe_bigquery_table_schema_tool 
 
 def build_graph() -> StateGraph:
 
-    builder = StateGraph(AgentState)
-    #builder.add_node("intent", route.node)
-    #builder.add_node("route", route.node)
-    #builder.add_node("plan", plan.node)
-    builder.add_node("plan_sql", PlanSQLNode())
-    #builder.add_node("sql_generate", sql_generate.node)
-    #builder.add_node("dry_run", dry_run.node)
-    #builder.add_node("execute", execute.node)
-    builder.add_node("run_sql", RunSQLNode())
-    #builder.add_node("repair_sql", repair_sql.node)
-    builder.add_node("summarize", SummarizeNode())
+    workflow = StateGraph(AgentState)
 
-    builder.set_entry_point("plan_sql")
-    builder.add_edge("plan_sql", "run_sql")
-    builder.add_edge("run_sql", "summarize")
-    builder.add_edge("summarize", END)
+    workflow.add_node("analyze", AnalyzeNode())
 
-    """
-    builder.add_edge(START, "intent")
-    builder.add_edge("intent", "plan") 
-    builder.add_edge("plan", "sql_generate")
-    builder.add_edge("sql_generate", "dry_run")
+    tools = [query_bigquery_tool, describe_bigquery_table_schema_tool]
+    tool_node = ToolNode(tools=tools)
+    workflow.add_node("tools", tool_node)
 
-    def on_dry_run(state):
-        return "execute" if state["dry_run_ok"] else "repair_sql"
+    workflow.add_node("summarize", SummarizeNode())
 
-    builder.add_conditional_edges("dry_run", on_dry_run, {"execute": "execute", "repair_sql": "repair_sql"})
-    builder.add_edge("execute", "summarize")
-    builder.add_edge("repair_sql", "sql_generate")
-    builder.add_edge("summarize", END)
-    """
+    workflow.add_conditional_edges("analyze", 
+                                    tools_condition, 
+                                    {"tools": "tools", "__end__": "summarize"})
 
-    graph = builder.compile()
+    workflow.add_edge("tools", "analyze")
+    workflow.add_edge("summarize", END)
+
+    workflow.set_entry_point("analyze")
+
+    memory = MemorySaver()
+    graph = workflow.compile(checkpointer=memory)
+
+    try:
+        graph.get_graph().draw_mermaid_png(output_file_path="graph.png")
+        logging.getLogger(__name__).info("graph: plotted to graph.png")
+    except Exception as e:
+        logging.getLogger(__name__).error(f"Failed to plot graph: {e}")
 
     logging.getLogger(__name__).info("graph: compiled")
 

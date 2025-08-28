@@ -6,46 +6,39 @@ logger = logging.getLogger(__name__)
 
 
 from src.graph.nodes.base_node import BaseNode
-from src.services.llm import get_llm
 from src.graph.state import AgentState
 
-SYSTEM_PROMPT = (
-    "You are a data analysis assistant for the thelook_ecommerce dataset. "
-    "When asked a question, produce BigQuery Standard SQL that uses fully-qualified, backticked table names, "
-    "then summarize key findings in plain English. Focus on actionable insights.\n\n"
-    "Tables and columns:\n"
-    "- orders(order_id, user_id, status, gender, created_at, returned_at, shipped_at, delivered_at, num_of_item)\n"
-    "- order_items(id, order_id, user_id, product_id, inventory_item_id, status, created_at, shipped_at, delivered_at, returned_at, sale_price)\n"
-    "- products(id, cost, category, name, brand, retail_price, department, sku, distribution_center_id)\n"
-    "- users(id, first_name, last_name, email, age, gender, state, street_address, postal_code, city, country, latitude, longitude, traffic_source, created_at, user_geom)\n"
-)
+def _load_prompt(template_name: str) -> str:
+    import importlib.resources as pkg_resources
+    from pathlib import Path
+    try:
+        from src.graph import prompts as prompts_pkg
+        with pkg_resources.files(prompts_pkg).joinpath(template_name).open("r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        here = Path(__file__).resolve().parents[1] / "prompts" / template_name
+        return here.read_text(encoding="utf-8")
 
 
 class SummarizeNode(BaseNode):
     def __call__(self, state: AgentState) -> AgentState:
-        # Don't hard-assert here; get_llm() will read env and raise if missing
-        llm = get_llm()
-        df_preview = state.get("df_preview")  # type: ignore[index]
-        preview = "" if df_preview is None else df_preview.to_string(index=False)
-        question = state.get("question", "")  # type: ignore[index]
+        logger.info("SummarizeNode called")
+
+        # Find the last tool output in the messages
+        last_message = state["messages"][-1]
+        preview = ""
+        if hasattr(last_message, 'content'):
+             # content from a ToolMessage is often a string representation of the data
+             preview = str(last_message.content)
+
+        question = state.get("question", "")
+        prompt_template = _load_prompt("summarize.md")
         prompt = (
-            f"{SYSTEM_PROMPT}\n\n"
-            f"Question: {question}\n"
-            "Here is a small preview of query results (first rows):\n"
-            f"{preview}\n\n"
-            "Provide a concise, actionable insight summary (3-6 sentences)."
+            prompt_template
+            .replace("{question}", question)
+            .replace("{preview}", preview)
         )
-        msg = llm.invoke(prompt)
-        state["summary"] = msg.content if isinstance(msg.content, str) else str(msg.content)  # type: ignore[index]
-        return state
-
-"""
-def node(state: Dict[str, Any]) -> Dict[str, Any]:
-    rows = state.get("result_rows") or []
-    sql = state.get("sql") or ""
-    insight = f"Fetched {len(rows)} rows. Example SQL executed:\n\n{sql[:400]}\n\nSample row: {rows[0] if rows else '{}'}"
-    state.setdefault("messages", []).append({"role": "assistant", "content": insight})
-    logger.info("summarize.node: message_appended", extra={"rows": len(rows)})
-    return state
-
-"""
+        msg = self.llm.invoke(prompt)
+        
+        # Return the final summary in the 'summary' field
+        return {"summary": msg.content if isinstance(msg.content, str) else str(msg.content)}

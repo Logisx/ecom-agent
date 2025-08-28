@@ -14,3 +14,9 @@ dependencies = [
     "pandas>=2.0.0",
     "python-dotenv>=1.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "graphviz>=0.21",
+    "langchain-community>=0.3.28",
+]
