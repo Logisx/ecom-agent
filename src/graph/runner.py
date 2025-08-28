@@ -6,6 +6,8 @@ from src.graph.state import AgentState
 
 from typing import Dict, Any
 
+from langchain_core.messages import HumanMessage
+
 logger = logging.getLogger(__name__)
 
 _graph = None
@@ -23,7 +25,7 @@ def run_chat_once(question: str, bq_config: Dict[str, Any], agent_config: Dict[s
     graph = get_graph()
     logger.info("runner: invoking graph")
     initial_state: AgentState = {
-        "messages": [],
+        "messages": [HumanMessage(content=question)],
         "question": question,
     }
 
@@ -31,7 +33,7 @@ def run_chat_once(question: str, bq_config: Dict[str, Any], agent_config: Dict[s
         initial_state,
         config={
             "configurable": {
-                "thread_id": "cli",
+                "thread_id": "1",
             }
         },
         stream_mode="values"
