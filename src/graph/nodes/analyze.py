@@ -9,6 +9,7 @@ from src.graph.tools.bigquery import (
 )
 
 import logging
+from langchain_core.messages import ToolMessage
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +22,14 @@ class AnalyzeNode(BaseNode):
         
         # Get the last message to use as a preview if it's a tool output
         last_message = state["messages"][-1] if state.get("messages") else None
+
+        print("MESSAGES:", state.get("messages"))
+        print("LAST MESSAGE:", last_message)
+        print("LAST MESSAGE TYPE:", type(last_message))
         preview = ""
-        if last_message and hasattr(last_message, 'content') and not hasattr(last_message, 'tool_calls'):
-             # content from a ToolMessage is often a string representation of the data
-             preview = str(last_message.content)
+        if isinstance(last_message, ToolMessage):
+            preview = str(last_message.content)
+            print("PREVIEW:", preview)
 
         prompt_template = self._load_prompt("analyze.md")
         prompt = (
@@ -34,6 +39,8 @@ class AnalyzeNode(BaseNode):
             .replace("{dataset_id}", str(state.get("dataset_id", "")))
             .replace("{project_id}", str(state.get("project_id", "")))
         )
+
+        print("PROMPT:", prompt)
 
         # Bind tools so the model can emit structured tool calls
         llm_with_tools = self.llm.bind_tools([

@@ -4,6 +4,8 @@ from typing import Optional
 from src.graph.build import build_graph
 from src.graph.state import AgentState
 
+from typing import Dict, Any
+
 logger = logging.getLogger(__name__)
 
 _graph = None
@@ -17,10 +19,7 @@ def get_graph():
     return _graph
 
 
-def run_chat_once(
-    *,
-    question: str,
-) -> str:
+def run_chat_once(question: str, bq_config: Dict[str, Any], agent_config: Dict[str, Any] ) -> str:
     graph = get_graph()
     logger.info("runner: invoking graph")
     initial_state: AgentState = {
@@ -48,6 +47,6 @@ def run_chat_once(
         final_state = event
 
     logger.info("runner: received final state")
-    return final_state.get("summary") or "No summary produced."
+    return "Finished" #final_state["messages"][-1] if final_state.get("messages") else "No summary produced."
 
 

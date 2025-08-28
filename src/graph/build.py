@@ -18,14 +18,13 @@ def build_graph() -> StateGraph:
     tool_node = ToolNode(tools=tools)
     workflow.add_node("tools", tool_node)
 
-    workflow.add_node("summarize", SummarizeNode())
+
 
     workflow.add_conditional_edges("analyze", 
                                     tools_condition, 
-                                    {"tools": "tools", "__end__": "summarize"})
+                                    {"tools": "tools", "__end__": "__end__"})
 
     workflow.add_edge("tools", "analyze")
-    workflow.add_edge("summarize", END)
 
     workflow.set_entry_point("analyze")
 

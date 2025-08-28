@@ -119,10 +119,12 @@ def main() -> None:
                 break
             
             try:
-                summary = run_chat_once(
-                    question=user_input, 
+                answer = run_chat_once(
+                    question=user_input,
+                    bq_config=bq_config,
+                    agent_config=agent_config,
                 )
-                print(f"Agent: {summary}\n")
+                print(f"Agent: {answer}\n")
             except Exception as e:
                 logging.error(f"An error occurred during chat execution: {e}", exc_info=True)
                 print(f"Error: {e}")
