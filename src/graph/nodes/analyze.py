@@ -18,13 +18,19 @@ class AnalyzeNode(BaseNode):
         logger.info("AnalyzeNode called")
 
         question = state.get("question", "") 
-        data = state.get("data", "")
+        
+        # Get the last message to use as a preview if it's a tool output
+        last_message = state["messages"][-1] if state.get("messages") else None
+        preview = ""
+        if last_message and hasattr(last_message, 'content') and not hasattr(last_message, 'tool_calls'):
+             # content from a ToolMessage is often a string representation of the data
+             preview = str(last_message.content)
 
         prompt_template = self._load_prompt("analyze.md")
         prompt = (
             prompt_template
             .replace("{question}", question)
-            .replace("{preview}", data)
+            .replace("{preview}", preview)
             .replace("{dataset_id}", str(state.get("dataset_id", "")))
             .replace("{project_id}", str(state.get("project_id", "")))
         )
@@ -36,4 +42,4 @@ class AnalyzeNode(BaseNode):
         ])
         msg = llm_with_tools.invoke(prompt)
         
-        return {"messages": [msg]} 
+        return {"messages": [msg]}

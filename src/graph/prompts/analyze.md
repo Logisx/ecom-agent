@@ -42,4 +42,4 @@ Notes and best practices:
 - Guard against NULLs where appropriate (e.g., COALESCE).
 - Ensure joins use correct keys and cardinality.
 
-Only call tools when necessary. If no further queries are needed, produce a short statement like: "Ready to summarize." without any tool call.
+If you have sufficient information from the preview above to answer the user's question, you MUST respond with the exact phrase "I have enough information to answer the question." and nothing else. Otherwise, call a tool.

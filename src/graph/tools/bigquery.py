@@ -26,7 +26,7 @@ def get_runner(
 
     # Load from yaml config if not provided
     config_loader = ConfigLoader()
-    bigquery_config = config_loader.config.get("bigquery", {})
+    bigquery_config = config_loader.get_config().get("bigquery", {})
 
     project_id = project_id or bigquery_config.get("project_id")
     dataset_id = dataset_id or bigquery_config.get("dataset_id")

@@ -7,7 +7,6 @@ class AgentState(TypedDict, total=False):
     # Conversation and inputs
     messages: Annotated[list[dict], add_messages]
     question: str
-    data: pd.DataFrame
     dataset_id: str
     project_id: Optional[str]
     model_name: str
