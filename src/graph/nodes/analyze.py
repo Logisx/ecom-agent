@@ -30,6 +30,6 @@ class AnalyzeNode(BaseNode):
             query_bigquery_tool,
             describe_bigquery_table_schema_tool,
         ])
-        msg = llm_with_tools.invoke(messages)
+        response = llm_with_tools.invoke(messages)
         
-        return {"messages": [msg]}
+        return {"messages": [response]}

@@ -1,5 +1,6 @@
 import os
 import yaml
+import argparse
 from typing import Dict, Any, Optional
 
 class ConfigLoader:
@@ -32,7 +33,7 @@ class ConfigLoader:
         """Returns a copy of the loaded configuration."""
         return self._config.copy() if self._config else {}
 
-    def merge_with_args(self, args: "argparse.Namespace") -> Dict[str, Any]:
+    def merge_with_args(self, args: argparse.Namespace) -> Dict[str, Any]:
         """
         Merges argparse arguments with the base YAML config.
         CLI arguments take precedence over YAML values.
