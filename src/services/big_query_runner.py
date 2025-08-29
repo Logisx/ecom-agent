@@ -26,7 +26,7 @@ class BigQueryRunner:
             logging.error(f"Failed to initialize BigQuery client: {str(e)}")
             raise
     
-    def execute_query(self, sql_query: str) -> pd.DataFrame:
+    def execute_query(self, sql_query: str, job_config: bigquery.QueryJobConfig) -> pd.DataFrame:
         """Execute a SQL query and return results as a DataFrame.
         
         Args:
@@ -40,7 +40,7 @@ class BigQueryRunner:
         """
         try:
             logging.info(f"Executing BigQuery query")
-            query_job = self.client.query(sql_query)
+            query_job = self.client.query(sql_query, job_config=job_config)
             df = query_job.result().to_dataframe()
             logging.info(f"Query completed successfully, returned {len(df)} rows")
             return df

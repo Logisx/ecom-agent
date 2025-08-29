@@ -7,6 +7,8 @@ from langchain_core.runnables import RunnableConfig
 from src.services.big_query_runner import BigQueryRunner
 from src.config.config_loader import ConfigLoader
 
+from google.cloud import bigquery
+
 # Global runner instance (lazy init so we only build it once when first needed)
 _RUNNER: Optional[BigQueryRunner] = None
 
@@ -43,7 +45,19 @@ def query_bigquery_tool(
     """Execute a BigQuery Standard SQL statement and return dataframe of top_n_rows (default to 500 rows)."""
     try:
         runner = get_runner()
-        df = runner.execute_query(sql)
+
+        # --- Dry run to validate the query ---
+        try:
+            job_config = bigquery.QueryJobConfig(dry_run=True, use_query_cache=False)
+            runner.execute_query(sql, job_config=job_config)
+            logging.info("Dry run successful.")
+        except Exception as e:
+            logging.error(f"Dry run failed: {e}")
+            return f"Dry run failed: {e}"
+
+        # --- Actual run ---
+        job_config = bigquery.QueryJobConfig(dry_run=False, use_query_cache=True)
+        df = runner.execute_query(sql, job_config=job_config)
         return df.to_string() if top_n_rows is None else df.head(top_n_rows).to_string()
     except Exception as e:
         logging.error(f"bigquery_sql_query failed: {e}")
