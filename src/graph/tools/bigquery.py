@@ -38,13 +38,13 @@ def get_runner() -> BigQueryRunner:
 def query_bigquery_tool(
     *,
     sql: str,
-    top_n_rows: int | None = None
+    top_n_rows: int | None = 500
 ) -> str:
-    """Execute a BigQuery Standard SQL statement and return dataframe of top_n_rows (all rows if top_n_rows not specified)."""
+    """Execute a BigQuery Standard SQL statement and return dataframe of top_n_rows (default to 500 rows)."""
     try:
         runner = get_runner()
         df = runner.execute_query(sql)
-        return df.to_string() if top_n_rows is None else df.head(top_n_rows)
+        return df.to_string() if top_n_rows is None else df.head(top_n_rows).to_string()
     except Exception as e:
         logging.error(f"bigquery_sql_query failed: {e}")
         return f"ERROR: {e}"

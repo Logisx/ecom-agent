@@ -4,6 +4,6 @@ bigquery:
 agent:
   llm_model: "gemini-2.5-flash"
   temperature: 0.3
-  max_iterations: 1
+  max_iterations: 5
 logging:
   level: "INFO"
