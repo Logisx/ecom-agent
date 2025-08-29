@@ -15,6 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 class AnalyzeNode(BaseNode):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.llm_with_tools = self.llm.bind_tools([
+            query_bigquery_tool,
+            describe_bigquery_table_schema_tool,
+        ])
+
     def __call__(self, state: AgentState) -> AgentState:
         logger.info("AnalyzeNode called")
 
@@ -25,11 +34,6 @@ class AnalyzeNode(BaseNode):
 
         print("MESSAGES:", state.get("messages"))
 
-        # Bind tools so the model can emit structured tool calls
-        llm_with_tools = self.llm.bind_tools([
-            query_bigquery_tool,
-            describe_bigquery_table_schema_tool,
-        ])
-        response = llm_with_tools.invoke(messages)
+        response = self.llm_with_tools.invoke(messages)
         
         return {"messages": [response]}
