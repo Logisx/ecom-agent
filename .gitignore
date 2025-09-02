@@ -54,3 +54,7 @@ dmypy.json
 
 # Graph structure
 graph.png
+
+
+# Logs
+*.log
