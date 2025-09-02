@@ -58,3 +58,4 @@ graph.png
 
 # Logs
 *.log
+logs/app.log

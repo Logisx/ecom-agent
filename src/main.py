@@ -9,36 +9,40 @@ from src.config.app_config_loader import AppConfigLoader
 from src.graph.runner import run_chat_once
 
 
+import logging
+from typing import Dict, Any
+
 def configure_logging(config: Dict[str, Any], verbose: bool = False, debug: bool = False) -> None:
     """
     Configure logging based on config and verbosity/debug flags.
     """
     log_config = config.get("logging", {})
     log_format = log_config.get("format", "%(asctime)s | %(levelname)s | %(name)s | %(message)s")
-    log_file = log_config.get("file", "logging/app.log")
+    log_file = log_config.get("file", "logs/app.log")
+    level_str = log_config.get("level", "WARNING").upper()
 
     if debug:
         level = logging.DEBUG
     elif verbose:
         level = logging.INFO
     else:
-        level = log_config.get("level", "WARNING").upper()
+        level = getattr(logging, level_str, logging.WARNING)
 
     root_logger = logging.getLogger()
-    root_logger.handlers.clear()
+    root_logger.handlers.clear() 
+    root_logger.setLevel(level)
 
     formatter = logging.Formatter(log_format)
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    root_logger.addHandler(console_handler)
+    if verbose or debug:
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        root_logger.addHandler(console_handler)
 
-    if not verbose and not debug:
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
 
-    root_logger.setLevel(level)
 
 
 
