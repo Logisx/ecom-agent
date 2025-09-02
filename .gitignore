@@ -53,7 +53,7 @@ dmypy.json
 .prof
 
 # Graph structure
-graph.png
+#graph.png
 
 
 # Logs

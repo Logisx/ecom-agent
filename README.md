@@ -1,5 +1,6 @@
 A custom LangGraph-based agent that analyzes e-commerce data from Google BigQuery and generates insights.  
 
+![Alt text](path/to/image.png)
 
 ---
 
