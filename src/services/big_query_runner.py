@@ -1,11 +1,10 @@
 import logging
-from typing import Optional, List, Dict, Any
 import pandas as pd
-from google.cloud import bigquery
 from typing import Optional, List, Dict, Any
-import pandas as pd
+
 from google.cloud import bigquery
 
+logger = logging.getLogger(__name__)
 
 class BigQueryRunner:
     """A lean BigQuery client for executing SQL queries and returning DataFrame results."""
@@ -17,13 +16,13 @@ class BigQueryRunner:
             project_id: Google Cloud project ID. If None, uses default credentials.
             dataset_id: BigQuery dataset ID. If None, uses default dataset.
         """
-        logging.info("Initializing BigQuery client")
+        logger.info("Initializing BigQuery client")
         try:
             self.client = bigquery.Client(project=project_id)
             self.dataset_id = dataset_id
-            logging.info(f"BigQuery client initialized for dataset: {self.dataset_id}")
+            logger.info(f"BigQuery client initialized for dataset: {self.dataset_id}")
         except Exception as e:
-            logging.error(f"Failed to initialize BigQuery client: {str(e)}")
+            logger.error(f"Failed to initialize BigQuery client: {str(e)}")
             raise
     
     def execute_query(self, sql_query: str, job_config: bigquery.QueryJobConfig) -> pd.DataFrame:
@@ -39,13 +38,13 @@ class BigQueryRunner:
             Exception: If query execution fails.
         """
         try:
-            logging.info(f"Executing BigQuery query")
+            logger.info(f"Executing BigQuery query")
             query_job = self.client.query(sql_query, job_config=job_config)
             df = query_job.result().to_dataframe()
-            logging.info(f"Query completed successfully, returned {len(df)} rows")
+            logger.info(f"Query completed successfully, returned {len(df)} rows")
             return df
         except Exception as e:
-            logging.error(f"BigQuery execution failed: {str(e)}")
+            logger.error(f"BigQuery execution failed: {str(e)}")
             raise 
 
     def get_table_schema(self, table_name: str) -> List[Dict[str, Any]]:
@@ -68,10 +67,10 @@ class BigQueryRunner:
                     "mode": field.mode,
                     "description": field.description or ""
                 })
-            logging.info(f"Retrieved schema for table {table_name}")
+            logger.info(f"Retrieved schema for table {table_name}")
             return schema_info
         except Exception as e:
-            logging.error(f"Failed to get schema for table {table_name}: {str(e)}")
+            logger.error(f"Failed to get schema for table {table_name}: {str(e)}")
             raise  
 
 
