@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Optional
 
 from langchain_core.tools import tool
@@ -11,6 +12,8 @@ from google.cloud import bigquery
 
 # Global runner instance (lazy init so we only build it once when first needed)
 _RUNNER: Optional[BigQueryRunner] = None
+MAX_BYTES_SCANNED = 1024 * 1024 * 1024  # 1 GB
+MAX_LIMIT = 1000
 
 
 def get_runner() -> BigQueryRunner:
@@ -40,17 +43,40 @@ def get_runner() -> BigQueryRunner:
 def query_bigquery_tool(
     *,
     sql: str,
-    top_n_rows: int | None = 500
+    top_n_rows: int | None = 500,
 ) -> str:
     """Execute a BigQuery Standard SQL statement and return dataframe of top_n_rows (default to 500 rows)."""
+    # --- SQL Safety Check ---
+    # A simple but effective check to ensure only read-only queries are executed.
+    if not sql.lstrip().lower().startswith("select"):
+        return "ERROR: Only read-only SQL queries (starting with SELECT) are allowed."
+
+    # Avoid SELECT *
+    if re.search(r"select\s+\*\s+from", sql.lower()):
+        return "ERROR: `SELECT *` is not allowed. Please specify the columns you need."
+
+    # Enforce a reasonable LIMIT value
+    limit_match = re.search(r"limit\s+(\d+)", sql.lower())
+    if limit_match:
+        limit_value = int(limit_match.group(1))
+        if limit_value > MAX_LIMIT:
+            return f"ERROR: The LIMIT value of {limit_value} exceeds the maximum allowed limit of {MAX_LIMIT}."
+    else:
+        return "ERROR: Your query must include a numeric LIMIT clause."
+
+
     try:
         runner = get_runner()
 
-        # --- Dry run to validate the query ---
+        # --- Dry run ---
         try:
             job_config = bigquery.QueryJobConfig(dry_run=True, use_query_cache=False)
-            runner.execute_query(sql, job_config=job_config)
+            dry_run_job = runner.client.query(sql, job_config=job_config)
             logging.info("Dry run successful.")
+
+            if dry_run_job.total_bytes_processed > MAX_BYTES_SCANNED:
+                return f"ERROR: Query would process {dry_run_job.total_bytes_processed} bytes, which exceeds the limit of {MAX_BYTES_SCANNED} bytes."
+
         except Exception as e:
             logging.error(f"Dry run failed: {e}")
             return f"Dry run failed: {e}"
