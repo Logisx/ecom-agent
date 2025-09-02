@@ -3,9 +3,10 @@ import os
 import typing as _t
 from dotenv import load_dotenv
 from src.config.config_loader import ConfigLoader
+from langchain_core.runnables import Runnable
 
 
-def _create_llm() -> ChatGoogleGenerativeAI:
+def _create_llm() -> Runnable:
     # Ensure .env is loaded for import-time configuration
     load_dotenv()
     api_key: _t.Optional[str] = os.getenv("GOOGLE_API_KEY")
@@ -16,18 +17,32 @@ def _create_llm() -> ChatGoogleGenerativeAI:
 
     config = ConfigLoader().get_config()
     agent_config = config.get("agent", {})
-    model_name = agent_config.get("llm_model", "gemini-2.5-flash")
+    model_name = agent_config.get("llm_model", "gemini-2.5-pro")
+    fallback_model_name = agent_config.get("fallback_llm_model", "gemini-2.0-flash")
     temperature = agent_config.get("temperature", 0.3)
 
-    return ChatGoogleGenerativeAI(
+    # Primary LLM
+    primary_llm = ChatGoogleGenerativeAI(
         model=model_name,
         temperature=temperature,
         api_key=api_key,
     )
 
+    # Fallback LLM
+    fallback_llm = ChatGoogleGenerativeAI(
+        model=fallback_model_name,
+        temperature=temperature,
+        api_key=api_key,
+    )
+
+    # Chain them together with fallbacks
+    return primary_llm.with_fallbacks([fallback_llm])
+
+
+
 
 _llm = _create_llm()
 
-def get_llm() -> ChatGoogleGenerativeAI:
+def get_llm() -> Runnable:
 
     return _llm

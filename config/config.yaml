@@ -2,7 +2,8 @@ bigquery:
   project_id: "ecomagent-opsfleet"
   dataset_id: "bigquery-public-data.thelook_ecommerce"
 agent:
-  llm_model: "gemini-2.5-flash"
+  llm_model: "gemini-2.5-flashыффф"
+  fallback_llm_model: "gemini-2.0-flash"
   temperature: 0.3
   max_iterations: 5
 logging:
