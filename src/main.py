@@ -3,10 +3,10 @@ import logging
 import sys
 from typing import List
 
-from src.services.big_query_runner import BigQueryRunner
 
+from src.services.big_query_runner import BigQueryRunner
 from src.graph.state import AgentState
-from src.config.config_loader import ConfigLoader
+from src.config.app_config_loader import AppConfigLoader
 
 import os
 from dotenv import load_dotenv
@@ -88,10 +88,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     load_dotenv()
+    
+
     parser = build_parser()
     args = parser.parse_args()
 
-    config_loader = ConfigLoader()
+    config_loader = AppConfigLoader()
     config = config_loader.merge_with_args(args)
 
     if args.command == "check-bq":
@@ -99,15 +101,10 @@ def main() -> None:
         sys.exit(exit_code)
     elif args.command == "chat":
         configure_logging(config)
-        # Ensure API key is present
-        if not os.getenv("GOOGLE_API_KEY"):
-            print("GOOGLE_API_KEY is not set.")
-            sys.exit(1)
-        
+
         bq_config = config.get("bigquery", {})
         agent_config = config.get("agent", {})
 
-        # Simple REPL
         print("EcomAgent ready. Type 'exit' to quit.\n")
         while True:
             try:

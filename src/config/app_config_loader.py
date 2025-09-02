@@ -3,13 +3,13 @@ import yaml
 import argparse
 from typing import Dict, Any, Optional
 
-class ConfigLoader:
+class AppConfigLoader:
     _instance = None
     _config: Optional[Dict[str, Any]] = None
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(ConfigLoader, cls).__new__(cls)
+            cls._instance = super(AppConfigLoader, cls).__new__(cls)
         return cls._instance
 
     def __init__(self):

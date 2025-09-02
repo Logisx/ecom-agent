@@ -1,21 +1,16 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
-import typing as _t
-from dotenv import load_dotenv
-from src.config.config_loader import ConfigLoader
+from typing import Optional
+from src.config.app_config_loader import AppConfigLoader
 from langchain_core.runnables import Runnable
+from src.config.env_config import EnvConfig
 
+_llm: Optional[Runnable] = None
 
 def _create_llm() -> Runnable:
-    # Ensure .env is loaded for import-time configuration
-    load_dotenv()
-    api_key: _t.Optional[str] = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "GOOGLE_API_KEY is not set. Set your Gemini API key to avoid using OAuth ADC with insufficient scopes."
-        )
+    api_key: Optional[str] = EnvConfig().google_api_key
 
-    config = ConfigLoader().get_config()
+    config = AppConfigLoader().get_config()
     agent_config = config.get("agent", {})
     model_name = agent_config.get("llm_model", "gemini-2.5-pro")
     fallback_model_name = agent_config.get("fallback_llm_model", "gemini-2.0-flash")
@@ -39,10 +34,8 @@ def _create_llm() -> Runnable:
     return primary_llm.with_fallbacks([fallback_llm])
 
 
-
-
-_llm = _create_llm()
-
 def get_llm() -> Runnable:
-
+    global _llm
+    if _llm is None:
+        _llm = _create_llm()  # runs after load_dotenv()
     return _llm

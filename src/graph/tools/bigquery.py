@@ -6,7 +6,7 @@ from typing import Optional
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 from src.services.big_query_runner import BigQueryRunner
-from src.config.config_loader import ConfigLoader
+from src.config.app_config_loader import AppConfigLoader
 
 from google.cloud import bigquery
 
@@ -26,7 +26,7 @@ def get_runner() -> BigQueryRunner:
         return _RUNNER
 
     # Load from yaml config if not provided
-    config_loader = ConfigLoader()
+    config_loader = AppConfigLoader()
     bigquery_config = config_loader.get_config().get("bigquery", {})
 
     project_id = bigquery_config.get("project_id")
