@@ -20,3 +20,4 @@ class AgentState(TypedDict, total=False):
     project_id: Optional[str]
     model_name: str
     summary: Optional[str]
+    first_turn: bool

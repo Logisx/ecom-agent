@@ -14,14 +14,13 @@ _graph: Optional[Any] = None
 
 def get_graph() -> Any:
     """
-    Retrieve or build the state graph (singleton).
+    Retrieve or build the state graph.
 
     Returns:
         Any: The state graph instance.
     """
     global _graph
     if _graph is None:
-        logger.info("Building the state graph (singleton).")
         _graph = build_graph()
     return _graph
 
