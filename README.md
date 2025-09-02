@@ -1,6 +1,13 @@
 A custom LangGraph-based agent that analyzes e-commerce data from Google BigQuery and generates insights.  
 
-![Alt text](path/to/image.png)
+I tried to focus on building a good codebase with an MVP agent solution instead of experimenting with best prompts/models and agent architectures.
+
+Below you find overview of the system and setup guidelines.
+
+
+
+
+![Agent architecture](https://raw.githubusercontent.com/Logisx/ecom-agent/main/graph.png)
 
 ---
 
